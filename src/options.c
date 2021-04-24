@@ -62,6 +62,9 @@ static error_t option_parser(int key, char *arg, struct argp_state *state) {
 		case 'D': // --daemon
 			opts->daemon = true;
 			break;
+		case 'l': // --log-file
+			opts->log_file = arg;
+			break;
 		case 'p': // --pid-file
 			opts->pid_file = arg;
 			break;
