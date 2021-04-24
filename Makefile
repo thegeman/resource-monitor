@@ -1,5 +1,5 @@
 
-SOURCES = src/main.c src/options.c src/proc_stat.c src/proc_net_dev.c src/proc_diskstats.c src/proc_meminfo.c
+SOURCES = src/main.c src/options.c src/daemon.c src/proc_stat.c src/proc_net_dev.c src/proc_diskstats.c src/proc_meminfo.c
 C_OPTS = -std=gnu99
 
 ifndef NO_CUDA

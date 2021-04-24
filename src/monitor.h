@@ -58,7 +58,9 @@ typedef struct {
 typedef struct {
 	const char *output_directory;
 	nanosec_t monitor_period;
+	const char *log_file;
 	const char *pid_file;
+	bool daemon;
 	bool enable_cpu_monitoring;
 #ifdef CUDA
 	bool enable_gpu_monitoring;

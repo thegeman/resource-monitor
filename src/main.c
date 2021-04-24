@@ -1,5 +1,6 @@
 
 #include "monitor.h"
+#include "daemon.h"
 #ifdef CUDA
 #include "nvidia.h"
 #endif
@@ -25,6 +26,7 @@ void sigint_handler(int signum) {
 
 void setup_sigint_handler() {
 	signal(SIGINT, sigint_handler);
+	signal(SIGTERM, sigint_handler);
 }
 
 /**
@@ -66,27 +68,6 @@ monitor_state_t init_state(monitor_options_t *opts, int argc, char **argv) {
 	return res;
 }
 
-/**
- * Creation/destruction of PID file
- */
-void create_pid_file(monitor_options_t *opts) {
-	// Use the POSIX open function to atomically check that the PID
-	// file does not yet exist and create it
-	int pid_fd;
-	if ((pid_fd = open(opts->pid_file, O_WRONLY | O_CREAT | O_EXCL,
-			S_IRUSR | S_IWUSR)) == -1) {
-		perror("Failed to create PID file\n");
-		exit(1);
-	}
-	// Write this process's identifier to the PID file
-	FILE *pid_file = fdopen(pid_fd, "w");
-	fprintf(pid_file, "%d", getpid());
-	fclose(pid_file);
-}
-
-void destroy_pid_file(monitor_options_t *opts) {
-	unlink(opts->pid_file);
-}
 
 /**
  * Initialization
@@ -107,10 +88,13 @@ void init_all_parsers(monitor_options_t *opts, monitor_state_t *state) {
 
 
 int main(int argc, char **argv) {
-	setup_sigint_handler();
 	monitor_options_t opts = parse_command_line(argc, argv);
+	if (opts.daemon) {
+		daemonize(&opts);
+	}
+
+	setup_sigint_handler();
 	monitor_state_t state = init_state(&opts, argc, argv);
-	create_pid_file(&opts);
 
 	init_all_parsers(&opts, &state);
 
@@ -126,8 +110,8 @@ int main(int argc, char **argv) {
 		sleep_until(last_update_time + opts.monitor_period);
 	}
 
-	printf("Received SIGINT, flushing output files and shutting down");
-	destroy_pid_file(&opts);
+	printf("Received SIGINT or SIGTERM, flushing output files and shutting down\n");
+	fflush(stdout);
 	for (trace_file_t *trace_file = state.trace_files; trace_file != NULL; trace_file = trace_file->next) {
 		trace_file->cleanup_callback(trace_file);
 	}
