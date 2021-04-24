@@ -55,6 +55,11 @@ void daemonize(monitor_options_t *opts) {
 		exit(EXIT_FAILURE);
 	} else if (pid > 0) {
 		// Succesfully forked, so exit the main process
+		printf("Started the daemon process with PID %d.\n", pid);
+		printf("To stop the daemon, send a SIGTERM signal using:\n");
+		printf("    kill %d\n", pid);
+		printf("To force the daemon to flush to disk, send a SIGUSR1 signal using:\n");
+		printf("    kill -SIGUSR1 %d\n", pid);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -77,8 +82,6 @@ void daemonize(monitor_options_t *opts) {
 
 	// Change the file mask for all monitoring output files
 	umask(0);
-
-	// TODO: Set up signal handling
 
 	// Create a PID file and make sure the file is cleaned up on exit
 	create_pid_file(opts);

@@ -16,17 +16,25 @@
 
 
 /**
- * Catch SIGINT and set a flag to stop the main monitoring loop.
+ * Catch various signals:
+ * - SIGINT/SIGTERM: stop the main monitoring loop
+ * - SIGUSR1: flush all metric files
  */
-volatile bool interrupted = false;
+volatile bool should_stop = false;
+volatile bool should_flush = false;
 
 void sigint_handler(int signum) {
-	interrupted = true;
+	should_stop = true;
+}
+
+void sigusr1_handler(int signum) {
+	should_flush = true;
 }
 
 void setup_sigint_handler() {
 	signal(SIGINT, sigint_handler);
 	signal(SIGTERM, sigint_handler);
+	signal(SIGUSR1, sigusr1_handler);
 }
 
 /**
@@ -99,12 +107,20 @@ int main(int argc, char **argv) {
 	init_all_parsers(&opts, &state);
 
 	nanosec_t last_update_time;
-	while (!interrupted) {
+	while (!should_stop) {
 		last_update_time = get_time();
 		DEBUG_PRINT("Monitoring at t=%llu\n", last_update_time);
 
 		for (trace_file_t *trace_file = state.trace_files; trace_file != NULL; trace_file = trace_file->next) {
 			trace_file->parse_callback(trace_file);
+		}
+
+		if (should_flush) {
+			printf("Received SIGUSR1, flushing output files\n");
+			for (trace_file_t *trace_file = state.trace_files; trace_file != NULL; trace_file = trace_file->next) {
+				fflush(trace_file->output_file);
+			}
+			should_flush = false;
 		}
 
 		sleep_until(last_update_time + opts.monitor_period);
