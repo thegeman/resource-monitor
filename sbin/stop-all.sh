@@ -8,5 +8,5 @@ RESOURCE_MONITOR_HOME="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")"
 
 # Stop the daemon on each machine in the list
 for machine in $MACHINES; do
-	ssh $machine "kill \$(cat \"$PID_FILE\")"
+	ssh $machine "if [ -e \"$PID_FILE\" ]; then kill \$(cat \"$PID_FILE\"); fi"
 done
