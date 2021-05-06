@@ -41,8 +41,8 @@ void setup_sigint_handler() {
  * Sleep until a given moment in time.
  */
 void sleep_until(nanosec_t wake_up_time) {
-	nanosec_t current_time = get_time();
-	if (current_time < wake_up_time) {
+	nanosec_t current_time;
+	while ((current_time = get_time()) < wake_up_time && !should_stop) {
 		nanosec_t sleep_time = wake_up_time - current_time;
 		struct timespec sleep_timespec = {
 			.tv_sec = sleep_time / SECONDS,
