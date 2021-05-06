@@ -12,5 +12,5 @@ for machine in $MACHINES; do
 		-D \
 		-p "$PID_FILE" \
 		-o "$METRIC_DIR" \
-		-l "$LOG_FILE"
+		-l "$LOG_FILE" >/dev/null
 done
